@@ -62,7 +62,7 @@ void loop() {
   Serial.print(", ");
   Serial.print(gy, 3); 
   Serial.print(", ");
-  Serial.print(gz, 3);
+  Serial.println(gz, 3);
 
   delay(100);
 
