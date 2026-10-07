@@ -41,20 +41,19 @@ void loop() {
   float gz = myIMU.readFloatGyroZ();
 
   // print to serial output
-  Serial.print("Accel (g): "); 
+  Serial.print(millis()); 
+  Serial.print(", ");
   Serial.print(ax, 3); 
   Serial.print(", ");
   Serial.print(ay, 3); 
   Serial.print(", ");
   Serial.print(az, 3); 
-  Serial.print("\n");
-  Serial.print("Gyro (degrees/s): "); 
+  Serial.print(", ");
   Serial.print(gx, 3); 
   Serial.print(", ");
   Serial.print(gy, 3); 
   Serial.print(", ");
-  Serial.print(gz, 3); 
-  Serial.print("\n");
+  Serial.print(gz, 3);
 
   delay(100);
 
