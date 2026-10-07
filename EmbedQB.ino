@@ -11,6 +11,12 @@ LSM6DS3 myIMU(I2C_MODE, 0x6A);
 // setup and main loop 
 void setup() {
   Serial.begin(115200);
+
+  // delay to allow for connection
+  while (!Serial && millis() < 3000) {
+    delay(10);
+  }
+
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH); 
 
@@ -27,7 +33,7 @@ void loop() {
   // linear acceleration
   float ax = myIMU.readFloatAccelX();
   float ay = myIMU.readFloatAccelY();
-  float az = myIMU.readFloatAccezZ();
+  float az = myIMU.readFloatAccelZ();
 
   // gyroscope velocity
   float gx = myIMU.readFloatGyroX();
