@@ -24,7 +24,8 @@ pip install -r requirements.txt
 Other dependencies listed in requirements.txt are automatically installed by the listed dependencies.
 
 ### Arduino 
-Need to install the library `Seeed Arduino LSM6DS3`.
+- Library `Seeed Arduino LSM6DS3 2.0.7` by Seeed Studio.
+- Board manager `Arduino AVR Boards 1.8.8` by Arduino.
 
 ## How to run:
 1. 
