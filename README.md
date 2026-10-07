@@ -20,10 +20,11 @@ pip install -r requirements.txt
 #### List of dependencies: 
 - pyserial 3.5
 - matplotlib 3.11.2
+
 Other dependencies listed in requirements.txt are automatically installed by the listed dependencies.
 
 ### Arduino 
-Need to install the library "Seeed Arduino LSM6DS3".
+Need to install the library `Seeed Arduino LSM6DS3`.
 
 ## How to run:
 1. 
