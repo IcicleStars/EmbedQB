@@ -25,6 +25,15 @@ void setup() {
   digitalWrite(IMU_PWR_PIN, HIGH);
 
   Wire.begin();
+
+  // initialize IMU 
+  if (myIMU.begin()) { 
+    // light up because BROKEN!
+    while (1) {
+      digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+      delay(200);
+    }
+  }
 }
 
 // main loop
