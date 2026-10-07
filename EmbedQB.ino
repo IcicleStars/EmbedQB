@@ -5,6 +5,9 @@
 // hardware pins
 const uint8_t IMU_PWR_PIN = PD5;
 
+// initialize IMU instance
+LSM6DS3 myIMU(I2C_MODE, 0x6A);
+
 // setup and main loop 
 void setup() {
   Serial.begin(115200);
@@ -21,9 +24,32 @@ void setup() {
 // main loop
 void loop() { 
 
-  Serial.println("i am doing stuff\n");
-  delay(1000);
+  // linear acceleration
+  float ax = myIMU.readFloatAccelX();
+  float ay = myIMU.readFloatAccelY();
+  float az = myIMU.readFloatAccezZ();
 
-  
+  // gyroscope velocity
+  float gx = myIMU.readFloatGyroX();
+  float gy = myIMU.readFloatGyroY(); 
+  float gz = myIMU.readFloatGyroZ();
+
+  // print to serial output
+  Serial.print("Accel (g): "); 
+  Serial.print(ax, 3); 
+  Serial.print(", ");
+  Serial.print(ay, 3); 
+  Serial.print(", ");
+  Serial.print(az, 3); 
+  Serial.print("\n");
+  Serial.print("Gyro (degrees/s): "); 
+  Serial.print(gx, 3); 
+  Serial.print(", ");
+  Serial.print(gy, 3); 
+  Serial.print(", ");
+  Serial.print(gz, 3); 
+  Serial.print("\n");
+
+  delay(100);
 
 }
