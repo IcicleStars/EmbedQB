@@ -4,6 +4,26 @@ Athletes training solo don’t have affordable real-time feedback to identify pr
 
 Our solution is to have a compact wearable that uses the Seeed Studio Xiao MG24 Sense’s IMU to capture motion data while throwing a football to process time-series signals locally. We intend for it to be a low-power, low-latency, low-cost and highly portable wearable that allows athletes to train solo with immediate feedback for correcting bad habits and reducing injury risk.
 
+## Signal Acquisition Chain
+1. 
+
 ## Prereqs/Installations: 
+### Hardware
+Seeed Studio XIAO MG24 (Sense)
+
+### Python
+Install all dependencies in a virtual environment: 
+``` 
+bash 
+pip install -r requirements.txt
+```
+### Arduino 
+Need to install the library "Seeed Arduino LSM6DS3".
 
 ## How to run:
+1. 
+
+## Contributors: 
+- Reykjavik Salvador
+- Mehar Saini
+- Pavan Sanagana
