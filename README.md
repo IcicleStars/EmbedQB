@@ -7,9 +7,10 @@ Our solution is to have a compact wearable that uses the Seeed Studio Xiao MG24 
 ## Signal Acquisition Chain
 1. The pin `PD5` is driven HIGH to supply power to the onboard LSM6DS3 IMU, initializing the I2C interface at `0x6A`
 2. The microcontroller continuously samples 6-DOF motion data (3-axis linear acceleration measured in gravity and 3-axis angular velocity measured in degrees/second) with a 2ms loop delay.
-3. Packets are transmitted over a USB serial at 115200 baud formatted as `millis, ax, ay, az, gx, gy, gz`,
-4. `analysis.py` connects to serial port and acquires 400 valid samples and obtains the total magnitude of the linear acceleration.
-5. Data is exported to `data/` directory and time-series subplots for acceleration and gyro rates are saved as a single `.png` file to `figures/` directory.
+3. All 6 axes are also put through EWMA as an LTI filter with an alpha value of $\alpha = 0.50$, acting as a low-pass filter to attenuate high-frequency noise.
+4. Packets are transmitted over a USB serial at 115200 baud formatted as `millis, ax, ay, az, gx, gy, gz, millis, f_ax, f_ay, f_az, f_gx, f_gy, f_gz`, 
+5. `analysis.py` connects to serial port and acquires 400 valid samples and obtains the total magnitude of the linear acceleration.
+6. Data is exported to `data/` directory and time-series subplots for acceleration and gyro rates are saved as a single `.png` file to `figures/` directory.
 
 ## Prereqs/Installations: 
 ### Hardware
