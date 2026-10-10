@@ -46,6 +46,9 @@ const float ALPHA = 0.50f;
 float filtered_ax = 0.0f;
 float filtered_ay = 0.0f;
 float filtered_az = 0.0f;
+float filtered_gx = 0.0f;
+float filtered_gy = 0.0f;
+float filtered_gz = 0.0f;
 
 inline float EWMA(float raw, float prev, float alpha) { 
   return (alpha * raw) + ((1.0f - alpha) * prev);
@@ -58,16 +61,23 @@ void loop() {
   float ay = myIMU.readFloatAccelY();
   float az = myIMU.readFloatAccelZ();
 
-  filtered_ax = EWMA(ax, filtered_ax, ALPHA);
-  filtered_ay = EWMA(ay, filtered_ay, ALPHA);
-  filtered_az = EWMA(az, filtered_az, ALPHA);
-
   // gyroscope velocity
   float gx = myIMU.readFloatGyroX();
   float gy = myIMU.readFloatGyroY(); 
   float gz = myIMU.readFloatGyroZ();
 
+  // filtered variables.
+  filtered_ax = EWMA(ax, filtered_ax, ALPHA);
+  filtered_ay = EWMA(ay, filtered_ay, ALPHA);
+  filtered_az = EWMA(az, filtered_az, ALPHA);
+  filtered_gx = EWMA(gx, filtered_gx, ALPHA);
+  filtered_gy = EWMA(gy, filtered_gy, ALPHA);
+  filtered_gz = EWMA(gz, filtered_gz, ALPHA);
+  
+  
+
   // print to serial output
+  // NO FILTER 
   Serial.print(millis()); 
   Serial.print(", ");
   Serial.print(ax, 3); 
@@ -80,7 +90,21 @@ void loop() {
   Serial.print(", ");
   Serial.print(gy, 3); 
   Serial.print(", ");
-  Serial.println(gz, 3);
+  Serial.print(gz, 3);
+  // YES FILTER
+  Serial.print(millis()); 
+  Serial.print(", ");
+  Serial.print(filtered_ax, 3); 
+  Serial.print(", ");
+  Serial.print(filtered_ay, 3); 
+  Serial.print(", ");
+  Serial.print(filtered_az, 3); 
+  Serial.print(", ");
+  Serial.print(filtered_gx, 3); 
+  Serial.print(", ");
+  Serial.print(filtered_gy, 3); 
+  Serial.print(", ");
+  Serial.println(filtered_gz, 3);
 
   delay(2);
 
