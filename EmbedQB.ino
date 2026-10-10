@@ -41,13 +41,26 @@ void setup() {
 
 }
 
+// filter variables 
+const float ALPHA = 0.50f; 
+float filtered_ax = 0.0f;
+float filtered_ay = 0.0f;
+float filtered_az = 0.0f;
+
+inline float EWMA(float raw, float prev, float alpha) { 
+  return (alpha * raw) + ((1.0f - alpha) * prev);
+}
+
 // main loop
 void loop() { 
-
   // linear acceleration
   float ax = myIMU.readFloatAccelX();
   float ay = myIMU.readFloatAccelY();
   float az = myIMU.readFloatAccelZ();
+
+  filtered_ax = EWMA(ax, filtered_ax, ALPHA);
+  filtered_ay = EWMA(ay, filtered_ay, ALPHA);
+  filtered_az = EWMA(az, filtered_az, ALPHA);
 
   // gyroscope velocity
   float gx = myIMU.readFloatGyroX();
