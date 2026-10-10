@@ -9,8 +9,6 @@ import matplotlib.pyplot as plt
 SERIAL_PORT = '/dev/cu.usbmodem0E76A5EF3'
 BAUD_RATE = 115200
 SAMPLE_COUNT = 400;
-OUTPUT_DATA = "data.csv"
-OUTPUT_FIGURE = "figure.png"
 
 # paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -19,14 +17,18 @@ FIGURE_DIR  = os.path.join(BASE_DIR, "figures")
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(FIGURE_DIR, exist_ok=True)
 
-CSV_PATH = os.path.join(DATA_DIR, OUTPUT_DATA)
-FIG_PATH = os.path.join(FIGURE_DIR, OUTPUT_FIGURE)
+# data and figures for "before filter" and "after filter"
+CSV_BEFORE = os.path.join(DATA_DIR, "data_before.csv")
+CSV_AFTER = os.path.join(DATA_DIR, "data_after.csv")
+FIG_BEFORE = os.path.join(FIGURE_DIR, "plot_after.png")
+FIG_AFTER = os.path.join(FIGURE_DIR, "plot_after.png")
 
 # get data
 def collect_data(port): 
     print(f"connecting to {port} at {BAUD_RATE} baud. . .")
     ser = None
-    records = []
+    records_before = []
+    records_after = []
 
     try: 
         ser = serial.Serial(port, BAUD_RATE, timeout = 2.0)
@@ -35,7 +37,7 @@ def collect_data(port):
         print("Listening for incoming IMU. . .")
 
         start_time = None
-        while len(records) < SAMPLE_COUNT: 
+        while len(records_before) < SAMPLE_COUNT: 
             raw_line = ser.readline()
             if not raw_line: 
                 continue 
@@ -45,9 +47,10 @@ def collect_data(port):
 
             # get csv lines
             parts = line.split(',')
-            if len(parts) >= 7: 
+            if len(parts) >= 14: 
                 try: 
-                    timestamp = float(parts[0])
+                    # raw packets
+                    timestamp_raw = float(parts[0])
                     ax = float(parts[1])
                     ay = float(parts[2])
                     az = float(parts[3])
@@ -55,18 +58,30 @@ def collect_data(port):
                     gy = float(parts[5])
                     gz = float(parts[6])
 
+                    # filtered packets
+                    timestamp_filt = float(parts[7])
+                    f_ax = float(parts[8])
+                    f_ay = float(parts[9])
+                    f_az = float(parts[10])
+                    f_gx = float(parts[11])
+                    f_gy = float(parts[12])
+                    f_gz = float(parts[13])
+
                     # calculate acc magnitude
-                    a_total = (ax**2 + ay**2 + az**2)**0.5
+                    a_total_raw = (ax**2 + ay**2 + az**2)**0.5
+                    a_total_filt = (f_ax**2 + f_ay**2 + f_az**2)**0.5
 
                     if start_time is None: 
                         start_time = time.time()
 
-                    records.append([timestamp, ax, ay, az, gx, gy, gz, a_total])
+                    records_before.append([timestamp_raw, ax, ay, az, gx, gy, gz, a_total_raw])
+                    records_after.append([timestamp_filt, f_ax, f_ay, f_az, f_gx, f_gy, f_gz, a_total_filt])
+
                 except ValueError: 
                     continue;
 
         total_wall_time = time.time()-start_time 
-        hz = len(records) / total_wall_time if total_wall_time > 0 else 0
+        hz = len(records_before) / total_wall_time if total_wall_time > 0 else 0
         print("done collecting samples")
 
     finally: 
@@ -74,10 +89,10 @@ def collect_data(port):
             ser.close()
             print("serial port closed")
 
-    return records
+    return records_before, records_after
 
 # save data and plot
-def plot(records): 
+def plot(records, csv_path, fig_path, title_label): 
 
     # nothing recorded
     if not records: 
@@ -85,11 +100,11 @@ def plot(records):
         return; 
 
     # write data file
-    with open(CSV_PATH, mode='w', newline='') as f: 
+    with open(csv_path, mode='w', newline='') as f: 
         writer = csv.writer(f)
         writer.writerow(["timestamp_ms", "ax_g", "ay_g", "az_g", "gx_dps", "gy_dps", "gz_dps", "magnitude_g"])
         writer.writerows(records)
-    print(f"saved data to {CSV_PATH}")
+    print(f"saved data to {csv_path}")
 
     # extract stuff for plotting
     timestamps = [r[0] for r in records]
@@ -102,6 +117,7 @@ def plot(records):
     gz = [r[6] for r in records]
     a_total = [r[7] for r in records]
 
+    # dual-panel figure
     fig, (ax_acc, ax_gyro) = plt.subplots(2, 1, figsize=(10, 8), sharex=True)
 
     # plot acceleration
@@ -109,7 +125,7 @@ def plot(records):
     ax_acc.plot(norm_time, ay, label='Accel Y', alpha=0.7)
     ax_acc.plot(norm_time, az, label='Accel Z', alpha=0.7)
     ax_acc.plot(norm_time, a_total, label='Total Magnitude', color='black', linewidth=1.5, linestyle='--')
-    ax_acc.set_title(f"EmbedQB IMU Kinematics ({OUTPUT_DATA})")
+    ax_acc.set_title(f"IMU Data - ({title_label})")
     ax_acc.set_ylabel("Linear Acceleration (g)")
     ax_acc.grid(True, linestyle='--', alpha=0.6)
     ax_acc.legend(loc='upper right')
@@ -125,11 +141,13 @@ def plot(records):
 
     # save fig
     plt.tight_layout()
-    plt.savefig(FIG_PATH, dpi=300)
-    print(f"Saved figure to {FIG_PATH}")
+    plt.savefig(fig_path, dpi=300)
+    print(f"Saved figure to {fig_path}")
     plt.close()
 
 # main func 
 if __name__ == "__main__": 
+    raw_data, filtered_data = collect_data(SERIAL_PORT)
     data = collect_data(SERIAL_PORT)
-    plot(data)
+    plot(raw_data, CSV_BEFORE, FIG_BEFORE, "Before")
+    plot(filtered_data, CSV_AFTER, FIG_AFTER, "After")

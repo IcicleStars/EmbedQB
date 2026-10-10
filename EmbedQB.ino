@@ -91,6 +91,7 @@ void loop() {
   Serial.print(gy, 3); 
   Serial.print(", ");
   Serial.print(gz, 3);
+  Serial.print(", ");
   // YES FILTER
   Serial.print(millis()); 
   Serial.print(", ");
