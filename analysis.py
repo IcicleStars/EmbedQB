@@ -148,6 +148,5 @@ def plot(records, csv_path, fig_path, title_label):
 # main func 
 if __name__ == "__main__": 
     raw_data, filtered_data = collect_data(SERIAL_PORT)
-    data = collect_data(SERIAL_PORT)
     plot(raw_data, CSV_BEFORE, FIG_BEFORE, "Before")
     plot(filtered_data, CSV_AFTER, FIG_AFTER, "After")
