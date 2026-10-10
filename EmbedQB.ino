@@ -34,6 +34,11 @@ void setup() {
       delay(200);
     }
   }
+
+  // circuit and sensor configuration: 416 Hz ODR, +/-16g scale, 2000 dps
+  myIMU.writeRegister(LSM6DS3_ACC_GYRO_CTRL1_XL, 0x84);
+  myIMU.writeRegister(LSM6DS3_ACC_GYRO_CTRL2_G, 0x8C);
+
 }
 
 // main loop
