@@ -1,5 +1,4 @@
 import serial
-import serial.tools.list_ports
 import csv
 import time
 import os
@@ -10,6 +9,10 @@ SERIAL_PORT = '/dev/cu.usbmodem0E76A5EF3'
 BAUD_RATE = 115200
 SAMPLE_COUNT = 400;
 
+# digital signal processing configs
+WINDOW_SIZE = 20
+THRESHOLD_VAL = 25.0
+
 # paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "../data")
@@ -17,11 +20,14 @@ FIGURE_DIR  = os.path.join(BASE_DIR, "../figures")
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(FIGURE_DIR, exist_ok=True)
 
-# data and figures for "before filter" and "after filter"
+# data and figures for "before filter", "after filter", energy, and threshold
 CSV_BEFORE = os.path.join(DATA_DIR, "data_before.csv")
 CSV_AFTER = os.path.join(DATA_DIR, "data_after.csv")
+CSV_ENERGY = os.path.join(DATA_DIR, "energy.csv") 
+
 FIG_BEFORE = os.path.join(FIGURE_DIR, "plot_after.png")
-FIG_AFTER = os.path.join(FIGURE_DIR, "plot_after.png")
+FIG_AFTER = os.path.join(FIGURE_DIR, "plot_after.png") 
+FIG_ENERGY = os.path.join(FIGURE_DIR, "energy.png")
 
 # get data
 def collect_data(port): 
@@ -109,6 +115,7 @@ def plot(records, csv_path, fig_path, title_label):
     # extract stuff for plotting
     timestamps = [r[0] for r in records]
     norm_time = [t - timestamps[0] for t in timestamps]
+
     ax = [r[1] for r in records]
     ay = [r[2] for r in records]
     az = [r[3] for r in records]
@@ -145,8 +152,44 @@ def plot(records, csv_path, fig_path, title_label):
     print(f"Saved figure to {fig_path}")
     plt.close()
 
+def process_dsp(records_after): 
+    if not records_after: 
+        return 
+
+    timestamps = [r[0] for r in records_after]
+    norm_time = [t - timestamps[0] for t in timestamps]
+
+    # calculate Window Energy 
+    energy=[] 
+    for i in range(len(records_after)): 
+        start_idx = max(0, i - WINDOW_SIZE + 1) 
+        window = [r[7]**2 for r in records_after[start_idx:i+1]]
+        energy.append(sum(window)) 
+
+
+    # save energy data file
+    with open(CSV_ENERGY, mode='w', newline='') as f: 
+        writer = csv.writer(f)
+        writer.writerow(["timestamp_ms", "energy"])
+        for r, e in zip(records_after, energy): 
+            writer.writerow([r[0], e]) 
+
+    # plot energy
+    plt.figure(figsize=(10, 4))
+    plt.plot(norm_time, energy, color='orange')
+    plt.title("Filtered Window Energy (E[k])")
+    plt.xlabel("Elapsed Time (ms)")
+    plt.ylabel("Energy")
+    plt.grid(True, linestyle="--", alpha=0.6)
+    plt.tight_layout() 
+    plt.savefig(FIG_ENERGY, dpi=300)
+    plt.close()
+
+    print("Saved Energy CSV files and figures to data/ and figures/")
+
 # main func 
 if __name__ == "__main__": 
     raw_data, filtered_data = collect_data(SERIAL_PORT)
     plot(raw_data, CSV_BEFORE, FIG_BEFORE, "Before")
     plot(filtered_data, CSV_AFTER, FIG_AFTER, "After")
+    process_dsp(filtered_data)
