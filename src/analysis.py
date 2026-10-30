@@ -12,8 +12,8 @@ SAMPLE_COUNT = 400;
 
 # paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(BASE_DIR, "data")
-FIGURE_DIR  = os.path.join(BASE_DIR, "figures")
+DATA_DIR = os.path.join(BASE_DIR, "../data")
+FIGURE_DIR  = os.path.join(BASE_DIR, "../figures")
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(FIGURE_DIR, exist_ok=True)
 
