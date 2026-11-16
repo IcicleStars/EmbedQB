@@ -1,0 +1,76 @@
+name: Build & Publish Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release tag (e.g., v1.0.0)'
+        required: true
+        default: 'v0.1.0'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Compile Firmware & Create GitHub Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Verify Python analysis script before packaging
+        run: |
+          python -m py_compile src/analysis.py
+
+      - name: Install Arduino CLI
+        uses: arduino/setup-arduino-cli@v2
+
+      - name: Configure Silicon Labs Core & LSM6DS3 Library
+        run: |
+          arduino-cli config init --overwrite
+          arduino-cli config add board_manager.additional_urls https://siliconlabs.github.io/arduino/package_arduinosilabs_index.json
+          arduino-cli core update-index
+          arduino-cli core install SiliconLabs:silabs
+          arduino-cli lib install "Seeed Arduino LSM6DS3"
+
+      - name: Compile XIAO MG24 Sense Firmware
+        run: |
+          arduino-cli compile --fqbn SiliconLabs:silabs:xiao_mg24 src/src.ino --warnings default --build-path ./build
+
+      - name: Package Release Artifacts
+        run: |
+          VERSION="${GITHUB_REF_NAME:-${{ github.event.inputs.tag_name }}}"
+          mkdir -p release_assets
+
+          cp build/*.bin release_assets/ 2>/dev/null || true
+          cp build/*.hex release_assets/ 2>/dev/null || true
+          cp build/*.elf release_assets/ 2>/dev/null || true
+
+          zip -r "release_assets/EmbedQB-${VERSION}-bundle.zip"             src/             requirements.txt             README.md             LICENSE             build/*.bin             build/*.hex
+
+          cd release_assets
+          sha256sum * > SHA256SUMS.txt
+
+      - name: Create GitHub Release & Upload Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github. event.inputs.tag_name || github.ref_name }}
+          name: EmbedQB ${{ github.event.inputs.tag_name || github.ref_name }}
+          generate_release_notes: true
+          files: |
+            release_assets/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
