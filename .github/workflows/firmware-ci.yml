@@ -1,0 +1,48 @@
+name: Arduino Firmware Build CI
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'src/**.ino'
+      - 'src/**.h'
+      - 'src/**.cpp'
+      - '.github/workflows/firmware-ci.yml'
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  compile-firmware:
+    name: Compile XIAO MG24 Sense Firmware
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Arduino CLI
+        uses: arduino/setup-arduino-cli@v2
+
+      - name: Configure Silicon Labs Board URL & Update Index
+        run: |
+          arduino-cli config init --overwrite
+          arduino-cli config add board_manager.additional_urls https://siliconlabs.github.io/arduino/package_arduinosilabs_index.json
+          arduino-cli core update-index
+
+      - name: Install Seeed XIAO MG24 Core & LSM6DS3 IMU Library
+        run: |
+          arduino-cli core install SiliconLabs:silabs
+          arduino-cli lib install "Seeed Arduino LSM6DS3"
+
+      - name: Verify & Compile src/src.ino
+        run: |
+          arduino-cli compile --fqbn SiliconLabs:silabs:xiao_mg24 src/src.ino --warnings default --build-path ./build
+
+      - name: Upload compiled firmware binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: embedqb-xiao-mg24-firmware
+          path: |
+            build/*.bin
+            build/*.hex
+            build/*.elf

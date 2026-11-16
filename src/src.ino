@@ -73,8 +73,6 @@ void loop() {
   filtered_gx = EWMA(gx, filtered_gx, ALPHA);
   filtered_gy = EWMA(gy, filtered_gy, ALPHA);
   filtered_gz = EWMA(gz, filtered_gz, ALPHA);
-  
-  
 
   // print to serial output
   // NO FILTER 

@@ -24,10 +24,12 @@ os.makedirs(FIGURE_DIR, exist_ok=True)
 CSV_BEFORE = os.path.join(DATA_DIR, "data_before.csv")
 CSV_AFTER = os.path.join(DATA_DIR, "data_after.csv")
 CSV_ENERGY = os.path.join(DATA_DIR, "energy.csv") 
+CSV_THRS = os.path.join(DATA_DIR, "threshhold.csv")
 
 FIG_BEFORE = os.path.join(FIGURE_DIR, "plot_after.png")
 FIG_AFTER = os.path.join(FIGURE_DIR, "plot_after.png") 
 FIG_ENERGY = os.path.join(FIGURE_DIR, "energy.png")
+FIG_THRS = os.path.join(FIGURE_DIR, "threshhold.png")
 
 # get data
 def collect_data(port): 
@@ -159,13 +161,15 @@ def process_dsp(records_after):
     timestamps = [r[0] for r in records_after]
     norm_time = [t - timestamps[0] for t in timestamps]
 
-    # calculate Window Energy 
+    # calculate window Energy 
     energy=[] 
     for i in range(len(records_after)): 
         start_idx = max(0, i - WINDOW_SIZE + 1) 
         window = [r[7]**2 for r in records_after[start_idx:i+1]]
         energy.append(sum(window)) 
 
+    # calculate event detection 
+    threshhold = [1 if e > THRESHOLD_VAL else 0 for e in energy]
 
     # save energy data file
     with open(CSV_ENERGY, mode='w', newline='') as f: 
@@ -173,6 +177,13 @@ def process_dsp(records_after):
         writer.writerow(["timestamp_ms", "energy"])
         for r, e in zip(records_after, energy): 
             writer.writerow([r[0], e]) 
+
+    # Save threshhold.csv
+    with open(CSV_THRS, mode='w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(["timestamp_ms", "event_detected"])
+        for r, t in zip(records_after, threshhold):
+            writer.writerow([r[0], t])
 
     # plot energy
     plt.figure(figsize=(10, 4))
@@ -183,6 +194,18 @@ def process_dsp(records_after):
     plt.grid(True, linestyle="--", alpha=0.6)
     plt.tight_layout() 
     plt.savefig(FIG_ENERGY, dpi=300)
+    plt.close()
+
+    # plot threshold
+    plt.figure(figsize=(10, 4))
+    plt.plot(norm_time, threshhold, color='red')
+    plt.title(f"Event Detection (Threshold = {THRESHOLD_VAL})")
+    plt.xlabel("Elapsed Time (ms)")
+    plt.ylabel("Detection (0 or 1)")
+    plt.yticks([0, 1])
+    plt.grid(True, linestyle='--', alpha=0.6)
+    plt.tight_layout()
+    plt.savefig(FIG_THRS, dpi=300)
     plt.close()
 
     print("Saved Energy CSV files and figures to data/ and figures/")
