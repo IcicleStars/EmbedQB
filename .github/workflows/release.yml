@@ -1,29 +1,95 @@
-name: Build & Publish Release
+name: Build, Changelog & Publish Release
 
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches: [ main, master ]
+    paths-ignore:
+      - 'CHANGELOG.md'
   workflow_dispatch:
-    inputs:
-      tag_name:
-        description: 'Release tag (e.g., v1.0.0)'
-        required: true
-        default: 'v0.1.0'
 
 permissions:
   contents: write
 
 jobs:
   release:
-    name: Compile Firmware & Create GitHub Release
+    name: Generate Changelog, Compile Firmware & Release
     runs-on: ubuntu-latest
+    if: "!startsWith(github.event.head_commit.message, 'chore(release):')"
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repository with full history and tags
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine Semantic Version Bump & Generate Changelog
+        id: changelog
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "Last tag: $LAST_TAG"
+
+          if [ "$LAST_TAG" = "v0.0.0" ]; then
+            COMMITS=$(git log --pretty=format:"%s (%h)")
+          else
+            COMMITS=$(git log ${LAST_TAG}..HEAD --pretty=format:"%s (%h)")
+          fi
+
+          VERSION=${LAST_TAG#v}
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+          if echo "$COMMITS" | grep -qE "BREAKING CHANGE|!:"; then
+            MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0
+          elif echo "$COMMITS" | grep -qE "^feat(\(.*\))?:"; then
+            MINOR=$((MINOR + 1)); PATCH=0
+          else
+            PATCH=$((PATCH + 1))
+          fi
+
+          NEW_TAG="v${MAJOR}.${MINOR}.${PATCH}"
+          echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
+
+          DATE=$(date +%Y-%m-%d)
+          {
+            echo "## [${NEW_TAG}] - ${DATE}"
+            echo ""
+            FEATS=$(echo "$COMMITS" | grep -E "^feat(\(.*\))?:" || true)
+            if [ -n "$FEATS" ]; then
+              echo "### Features"
+              echo "$FEATS" | sed 's/^/- /'
+              echo ""
+            fi
+
+            FIXES=$(echo "$COMMITS" | grep -E "^fix(\(.*\))?:" || true)
+            if [ -n "$FIXES" ]; then
+              echo "### Bug Fixes"
+              echo "$FIXES" | sed 's/^/- /'
+              echo ""
+            fi
+
+            OTHERS=$(echo "$COMMITS" | grep -vE "^(feat|fix)(\(.*\))?:" || true)
+            if [ -n "$OTHERS" ]; then
+              echo "### Other Changes (CI, Docs, Refactor)"
+              echo "$OTHERS" | sed 's/^/- /'
+              echo ""
+            fi
+          } > RELEASE_NOTES.md
+
+          if [ -f CHANGELOG.md ]; then
+             sed -i '1s/^# Changelog\n\n//' CHANGELOG.md
+            { echo "# Changelog"; echo ""; cat RELEASE_NOTES.md; cat CHANGELOG.md; } > CHANGELOG.tmp
+            mv CHANGELOG.tmp CHANGELOG.md
+          else
+            { echo "# Changelog"; echo ""; cat RELEASE_NOTES.md; } > CHANGELOG.md
+          fi
+
+          git add CHANGELOG.md
+          git commit -m "chore(release): ${NEW_TAG} [skip ci]" || true
+          git tag -a "$NEW_TAG" -m "Release $NEW_TAG"
+          git push origin HEAD:${GITHUB_REF_NAME} --follow-tags
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
@@ -35,41 +101,34 @@ jobs:
         run: |
           python -m py_compile src/analysis.py
 
-      - name: Install Arduino CLI
+      - name: Install Arduino CLI & Compile XIAO MG24 Firmware
         uses: arduino/setup-arduino-cli@v2
 
-      - name: Configure Silicon Labs Core & LSM6DS3 Library
+      - name: Build Firmware
         run: |
           arduino-cli config init --overwrite
           arduino-cli config add board_manager.additional_urls https://siliconlabs.github.io/arduino/package_arduinosilabs_index.json
           arduino-cli core update-index
           arduino-cli core install SiliconLabs:silabs
           arduino-cli lib install "Seeed Arduino LSM6DS3"
-
-      - name: Compile XIAO MG24 Sense Firmware
-        run: |
           arduino-cli compile --fqbn SiliconLabs:silabs:xiao_mg24 src/src.ino --warnings default --build-path ./build
 
-      - name: Package Release Artifacts
+      - name: Package Release Assets
         run: |
-          VERSION="${GITHUB_REF_NAME:-${{ github.event.inputs.tag_name }}}"
+          VERSION="${{ steps.changelog.outputs.new_tag }}"
           mkdir -p release_assets
-
-          cp build/*.bin release_assets/ 2>/dev/null || true
-          cp build/*.hex release_assets/ 2>/dev/null || true
-          cp build/*.elf release_assets/ 2>/dev/null || true
-
-          zip -r "release_assets/EmbedQB-${VERSION}-bundle.zip"             src/             requirements.txt             README.md             LICENSE             build/*.bin             build/*.hex
-
+          cp build/*.bin build/*.hex build/*.elf release_assets/ 2>/dev/null || true
+          zip -r "release_assets/EmbedQB-${VERSION}-bundle.zip" \
+            src/ requirements.txt README.md LICENSE CHANGELOG.md build/*.bin build/*.hex
           cd release_assets
           sha256sum * > SHA256SUMS.txt
 
-      - name: Create GitHub Release & Upload Assets
+      - name: Publish GitHub Release with Changelog
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github. event.inputs.tag_name || github.ref_name }}
-          name: EmbedQB ${{ github.event.inputs.tag_name || github.ref_name }}
-          generate_release_notes: true
+          tag_name: ${{ steps.changelog.outputs.new_tag }}
+          name: EmbedQB ${{ steps.changelog.outputs.new_tag }}
+          body_path: RELEASE_NOTES.md
           files: |
             release_assets/*
         env:
