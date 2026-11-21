@@ -1,5 +1,16 @@
 # Changelog
 
+## [v0.2.0] - 2026-11-21
+
+### Features
+- feat: Add labeled trial metrics and spectral analysis (76b93a6)
+
+### Other Changes (CI, Docs, Refactor)
+- Merge pull request #16 from IcicleStars/feat/dataset-recorder (8a8ab9d)
+- docs: Update sensor pipeline documentation (3daca62)
+- ci: strip changelog before prepending future versions (76def8d)
+- ci: Fix trigger path & expand smoke test (9ed14f6)
+
 ## [v0.1.0] - 2026-11-16
 
 ### Features
