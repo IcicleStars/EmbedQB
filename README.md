@@ -1,25 +1,29 @@
 # EmbedQB
-## Problem & Overview
-Athletes training solo don’t have affordable real-time feedback to identify problems in their form when training solo, requiring them to take extra time to watch self-recordings of their practice to make corrections. This still lacks immediate response to the development of bad habits which can cause them to occur anyway. We hope to provide affordable and quantifiable feedback to prospective athletes to reduce injury risks and allows for solo training.
 
-Our solution is to have a compact wearable that uses the Seeed Studio Xiao MG24 Sense’s IMU to capture motion data while throwing a football to process time-series signals locally. We intend for it to be a low-power, low-latency, low-cost and highly portable wearable that allows athletes to train solo with immediate feedback for correcting bad habits and reducing injury risk.
+## Problem & Overview
+Athletes training solo don't have affordable real-time feedback to identify problems in their form, requiring them to take extra time to watch self-recordings of their practice to make corrections. This still lacks immediate response to the development of bad habits which can cause them to occur anyway. We hope to provide affordable and quantifiable feedback to prospective athletes to reduce injury risks and allow for solo training.
+
+Our solution is a compact wearable that uses the Seeed Studio XIAO MG24 Sense's IMU to capture motion data while throwing a football and process time-series signals locally. We intend for it to be a low-power, low-latency, low-cost, and highly portable wearable that allows athletes to train solo with immediate feedback for correcting bad habits and reducing injury risk.
 
 ## Signal Acquisition Chain
-1. The pin `PD5` is driven HIGH to supply power to the onboard LSM6DS3 IMU, initializing the I2C interface at `0x6A`
-2. The microcontroller continuously samples 6-DOF motion data (3-axis linear acceleration measured in gravity and 3-axis angular velocity measured in degrees/second) with a 2ms loop delay.
-3. All 6 axes are also put through EWMA as an LTI filter with an alpha value of $\alpha = 0.50$, acting as a low-pass filter to attenuate high-frequency noise.
-4. Packets are transmitted over a USB serial at 115200 baud formatted as `millis, ax, ay, az, gx, gy, gz, millis, f_ax, f_ay, f_az, f_gx, f_gy, f_gz`, 
-5. `analysis.py` connects to serial port and acquires 400 valid samples and obtains the total magnitude of the linear acceleration.
-6. Data is exported to `data/` directory and time-series subplots for acceleration and gyro rates are saved as a single `.png` file to `figures/` directory.
+1. Pin `PD5` is driven `HIGH` to supply power to the onboard LSM6DS3 IMU, initializing the I2C interface at `0x6A` in fast mode (`400 kHz`).
+2. A non-blocking `micros()` timer (`2404 µs` interval) continuously samples 6-DOF motion data (3-axis linear acceleration at $\pm 16\text{ g}$ and 3-axis angular velocity at $2000\text{ dps}$) at **416 Hz**.
+3. All 6 axes are filtered on-device through a **2nd-order Butterworth low-pass filter** ($f_c = 12\text{ Hz}$, Direct Form II Transposed biquad) to attenuate high-frequency noise while preserving the target 1–15 Hz hip-rotation band.
+4. On-device DSP computes raw and filtered linear acceleration magnitude, maintains an $O(1)$ **20-sample (~48 ms) circular buffer** for sliding-window energy ($E[k]$), and performs binary event detection (`1` when $E[k] > 25.0$, else `0`), toggling `LED_BUILTIN` during active throw events.
+5. Unified 17-field CSV packets are transmitted over USB serial at **921600 baud**:
+   `timestamp, ax, ay, az, gx, gy, gz, a_total_raw, f_ax, f_ay, f_az, f_gx, f_gy, f_gz, a_total_filt, window_energy, event_detected`
+6. `src/analysis.py` reads the serial stream, exports CSVs to `data/` (unfiltered, filtered, energy, threshold, and extracted form metrics), and saves time-series, energy, event-detection, FFT spectrum, and STFT spectrogram plots to `figures/`. Passing `--label` archives each full trial waveform to `data/trials/` and appends the extracted feature vector to `data/dataset.csv` for ML training.
 
-## Prereqs/Installations: 
+## Prereqs / Installations
+
 ### Hardware
-Seeed Studio XIAO MG24 (Sense)
+- Seeed Studio XIAO MG24 (Sense)
 
 ### Python
-#### List of dependencies: 
-- pyserial 3.5
-- matplotlib 3.11.2
+#### List of dependencies:
+- `pyserial 3.5`
+- `matplotlib 3.11.2`
+- `numpy 2.5.3`
 
 Other dependencies listed in requirements.txt are automatically installed by the listed dependencies or by Python. It's recommended to install all dependencies in a virtual environment: 
 ``` 

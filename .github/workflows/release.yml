@@ -79,8 +79,12 @@ jobs:
           } > RELEASE_NOTES.md
 
           if [ -f CHANGELOG.md ]; then
-             sed -i '1s/^# Changelog\n\n//' CHANGELOG.md
-            { echo "# Changelog"; echo ""; cat RELEASE_NOTES.md; cat CHANGELOG.md; } > CHANGELOG.tmp
+            {
+              echo "# Changelog"
+              echo ""
+              cat RELEASE_NOTES.md
+              sed '/^# Changelog$/d' CHANGELOG.md | sed '/./,$!d'
+            } > CHANGELOG.tmp
             mv CHANGELOG.tmp CHANGELOG.md
           else
             { echo "# Changelog"; echo ""; cat RELEASE_NOTES.md; } > CHANGELOG.md

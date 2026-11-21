@@ -45,7 +45,7 @@ int buffer_idx = 0;
 float window_energy = 0.0f;
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(921600);
 
   // Delay to allow for serial connection
   while (!Serial && millis() < 3000) {

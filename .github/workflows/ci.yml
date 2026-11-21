@@ -6,7 +6,7 @@ on:
     paths:
       - 'src/**.py'
       - 'requirements.txt'
-      - '.github/workflows/python-ci.yml'
+      - '.github/workflows/ci.yml'
   pull_request:
     branches: [ main, master ]
 
@@ -42,7 +42,7 @@ jobs:
         run: |
           python -m py_compile src/analysis.py
 
-      - name: Headless Smoke Test for Plot & DSP Pipeline
+      - name: Headless Smoke Test for Plot, FFT, STFT & Form Metrics Pipeline
         run: |
           python - << 'EOF'
           import os
@@ -58,23 +58,37 @@ jobs:
               a_mag = (ax**2 + ay**2 + az**2) ** 0.5
               synthetic_records.append([t_ms, ax, ay, az, gx, gy, gz, a_mag])
 
+          synthetic_dsp = [
+              [r[0], r[7]**2 * 20, 1 if (r[7]**2 * 20) > 25.0 else 0]
+              for r in synthetic_records
+          ]
+
           analysis.plot(synthetic_records, analysis.CSV_BEFORE, analysis.FIG_BEFORE, "CI Before")
           analysis.plot(synthetic_records, analysis.CSV_AFTER, analysis.FIG_AFTER, "CI After")
+          analysis.save_and_plot_dsp(synthetic_dsp)
+          analysis.plot_fft(synthetic_records, analysis.FIG_FFT)
+          analysis.plot_stft(synthetic_records, analysis.FIG_STFT)
+          metrics = analysis.compute_form_metrics(synthetic_records, synthetic_dsp, analysis.CSV_METRICS)
+          analysis.append_to_dataset(metrics, "ci_test", dataset_path=analysis.CSV_DATASET, trial_file="ci.csv")
 
-          if hasattr(analysis, "process_dsp"):
-              analysis.process_dsp(synthetic_records)
-          elif hasattr(analysis, "save_and_plot_dsp"):
-              synthetic_dsp = [[r[0], r[7]**2 * 20, 1 if (r[7]**2 * 20) > 25.0 else 0] for r in synthetic_records]
-              analysis.save_and_plot_dsp(synthetic_dsp)
-
-          assert os.path.exists(analysis.CSV_BEFORE), "Missing data_before.csv"
-          assert os.path.exists(analysis.CSV_AFTER), "Missing data_after.csv"
-          assert os.path.exists(analysis.CSV_ENERGY), "Missing energy.csv"
-          assert os.path.exists(analysis.CSV_THRS), "Missing threshhold.csv"
-          assert os.path.exists(analysis.FIG_AFTER), "Missing plot_after.png"
-          assert os.path.exists(analysis.FIG_ENERGY), "Missing energy.png"
-          assert os.path.exists(analysis.FIG_THRS), "Missing threshhold.png"
-          print("All CSV and Figure outputs verified successfully!")
+          expected_files = [
+              analysis.CSV_BEFORE,
+              analysis.CSV_AFTER,
+              analysis.CSV_ENERGY,
+              analysis.CSV_THRS,
+              analysis.CSV_METRICS,
+              analysis.CSV_DATASET,
+              analysis.FIG_BEFORE,
+              analysis.FIG_AFTER,
+              analysis.FIG_ENERGY,
+              analysis.FIG_THRS,
+              analysis.FIG_FFT,
+              analysis.FIG_STFT,
+          ]
+          for path in expected_files:
+              assert os.path.exists(path), f"Missing expected output: {path}"
+          assert len(metrics) >= 1, "Expected at least one detected throw event"
+          print("All CSV, FFT/STFT, Metrics, and Dataset outputs verified successfully!")
           EOF
 
       - name: Upload generated test plots as CI artifacts
