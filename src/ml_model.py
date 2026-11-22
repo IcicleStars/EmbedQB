@@ -144,7 +144,6 @@ def train_model(dataset_path=DEFAULT_DATASET, model_path=DEFAULT_MODEL_PATH):
     print(f"Trained model on {len(X)} samples across classes {artifact['classes']} -> saved to {model_path}")
     return artifact
 
-# Method for generating feedback for user
 def generate_coaching_feedback(label, metrics):
     """Produces an immediate, actionable form cue based on extracted throw metrics."""
     if label == "idle":
