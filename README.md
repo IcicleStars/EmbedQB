@@ -23,7 +23,9 @@ Our solution is a compact wearable that uses the Seeed Studio XIAO MG24 Sense's 
 #### List of dependencies:
 - `pyserial 3.5`
 - `matplotlib 3.11.2`
-- `numpy 2.5.3`
+- `numpy 2.5.3` 
+- `scikit-learn 1.6.1` 
+- `joblib 1.4.2`
 
 Other dependencies listed in requirements.txt are automatically installed by the listed dependencies or by Python. It's recommended to install all dependencies in a virtual environment: 
 ``` 
@@ -48,21 +50,44 @@ pip install -r requirements.txt
      ```
    - **Windows:**
      ```
-     To be filled . . .
+     python -m venv venv
+v    env\Scripts\activate.bat
+     pip install -r requirements.txt
      ```
 4. Check the board's serial port identifier
    - **macOS**: Click `tools` in the menu bar and look for the port, which should show `/dev/cu.usbmodem...`
    - **Linux**: Click `tools` in the menu bar and look for the port, which should show `/dev/ttyACM0` or similar.
-   - **Windows**: To be filled . . .
+   - **Windows**: Click `Tools -> Port` in the Arduino IDE or open Device Manager -> Ports (COM & LPT) to find the assigned port (e.g., `COM3`, `COM4`).
 
    *Note for Linux:* If you encounter a `Permission denied` error, add your user to the `dialout` group via `sudo usermod -aG dialout $USER`, then log out and log back in.
-6. Update `SERIAL_PORT` in `analysis.py` with the system's port name.
-7. Run the collection script (Make sure to close the Serial Monitor / Plotter in the Arduino IDE!)
+5. Run the collection script (Make sure to close the Serial Monitor / Plotter in the Arduino IDE!)
    ```
    bash
-   python analysis.py
+   python src/analysis.py --port /dev/cu.usbmodem0E76A5EF3 --baud 921600 --samples 400
    ```
-8. Recorded data will be saved to `data/` and `figures/` which will automatically be created by the python file.
+   You can also set defaults via environment variables `EMBEDQB_PORT`, `EMBEDQB_BAUD`, and `EMBEDQB_SAMPLES` instead of passing flags every run.
+
+## Trials and Training the ML Classifier 
+1. Record labeled throwing trials using `--label` (Options are `good_form`, `bad_form`, and `idle`)
+   ```
+   bash
+   python src/analysis.py --port /dev/cu.usbmodem0E76A5EF3 --samples 1000 --label good_form
+   python src/analysis.py --port /dev/cu.usbmodem0E76A5EF3 --samples 1000 --label bad_form
+   python src/analysis.py --port /dev/cu.usbmodem0E76A5EF3 --samples 1000 --label idle
+   ```
+2. Train Random Forest form classifier 
+   ``` 
+   bash
+   python src/ml_model.py
+   ```
+3. Evaluate Event Detection Accuracy and ML Classification 
+   ``` 
+   bash 
+   python src/evaluate
+   ``` 
+
+## Outputs
+Outputs for are automatically created and inserted in `data/`, `figures/`, and `models/`.
 
 ## Contributors: 
 - Reykjavik Salvador
