@@ -41,6 +41,7 @@ FIG_THRS = os.path.join(FIGURE_DIR, "threshhold.png")
 FIG_FFT = os.path.join(FIGURE_DIR, "fft_analysis.png")
 FIG_STFT = os.path.join(FIGURE_DIR, "stft_spectrogram.png")
 
+# Metrics
 METRICS_FIELDS = [
     "event_id",
     "start_ms",
@@ -53,7 +54,6 @@ METRICS_FIELDS = [
     "peak_energy",
     "threshold_triggered",
 ]
-
 
 def collect_data(port, baud_rate=DEFAULT_BAUD, sample_count=DEFAULT_SAMPLES):
     print(f"Connecting to {port} at {baud_rate} baud...")
@@ -77,7 +77,7 @@ def collect_data(port, baud_rate=DEFAULT_BAUD, sample_count=DEFAULT_SAMPLES):
             line = raw_line.decode("utf-8", errors="ignore").strip()
             parts = line.split(",")
 
-            # Expecting 17 comma-separated values from src.ino
+            # Expecting 17 values from src.ino
             if len(parts) >= 17:
                 try:
                     timestamp = float(parts[0])
@@ -87,12 +87,12 @@ def collect_data(port, baud_rate=DEFAULT_BAUD, sample_count=DEFAULT_SAMPLES):
                     gx, gy, gz = float(parts[4]), float(parts[5]), float(parts[6])
                     a_total_raw = float(parts[7])
 
-                    # Butterworth-filtered 6-DOF + on-device filtered magnitude
+                    # Filtered 6-DOF + on-device filtered magnitude
                     f_ax, f_ay, f_az = float(parts[8]), float(parts[9]), float(parts[10])
                     f_gx, f_gy, f_gz = float(parts[11]), float(parts[12]), float(parts[13])
                     a_total_filt = float(parts[14])
 
-                    # On-device sliding window energy and threshold detection
+                    # On-device sliding window energy and threshold event detection
                     window_energy = float(parts[15])
                     event_detected = int(parts[16])
 
@@ -123,7 +123,7 @@ def plot(records, csv_path, fig_path, title_label):
         print("No records to plot")
         return
 
-    with open(csv_path, mode="w", newline="") as f:
+    with open(csv_path, mode='w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(["timestamp_ms", "ax_g", "ay_g", "az_g", "gx_dps", "gy_dps", "gz_dps", "magnitude_g"])
         writer.writerows(records)
@@ -142,22 +142,22 @@ def plot(records, csv_path, fig_path, title_label):
 
     fig, (ax_acc, ax_gyro) = plt.subplots(2, 1, figsize=(10, 8), sharex=True)
 
-    ax_acc.plot(norm_time, ax, label="Accel X", alpha=0.7)
-    ax_acc.plot(norm_time, ay, label="Accel Y", alpha=0.7)
-    ax_acc.plot(norm_time, az, label="Accel Z", alpha=0.7)
-    ax_acc.plot(norm_time, a_total, label="Total Magnitude", color="black", linewidth=1.5, linestyle="--")
+    ax_acc.plot(norm_time, ax, label='Accel X', alpha=0.7)
+    ax_acc.plot(norm_time, ay, label='Accel Y', alpha=0.7)
+    ax_acc.plot(norm_time, az, label='Accel Z', alpha=0.7)
+    ax_acc.plot(norm_time, a_total, label='Total Magnitude', color='black', linewidth=1.5, linestyle='--')
     ax_acc.set_title(f"IMU Data - ({title_label})")
     ax_acc.set_ylabel("Linear Acceleration (g)")
-    ax_acc.grid(True, linestyle="--", alpha=0.6)
-    ax_acc.legend(loc="upper right")
+    ax_acc.grid(True, linestyle='--', alpha=0.6)
+    ax_acc.legend(loc='upper right')
 
-    ax_gyro.plot(norm_time, gx, label="Gyro X (Pitch Rate)", alpha=0.7)
-    ax_gyro.plot(norm_time, gy, label="Gyro Y (Roll Rate)", alpha=0.7)
-    ax_gyro.plot(norm_time, gz, label="Gyro Z (Yaw Rate)", alpha=0.7)
+    ax_gyro.plot(norm_time, gx, label='Gyro X (Pitch Rate)', alpha=0.7)
+    ax_gyro.plot(norm_time, gy, label='Gyro Y (Roll Rate)', alpha=0.7)
+    ax_gyro.plot(norm_time, gz, label='Gyro Z (Yaw Rate)', alpha=0.7)
     ax_gyro.set_xlabel("Elapsed Time (ms)")
     ax_gyro.set_ylabel("Angular Velocity (°/s)")
-    ax_gyro.grid(True, linestyle="--", alpha=0.6)
-    ax_gyro.legend(loc="upper right")
+    ax_gyro.grid(True, linestyle='--', alpha=0.6)
+    ax_gyro.legend(loc='upper right')
 
     plt.tight_layout()
     plt.savefig(fig_path, dpi=300)
@@ -174,18 +174,21 @@ def save_and_plot_dsp(records_dsp):
     energy = [r[1] for r in records_dsp]
     threshold = [r[2] for r in records_dsp]
 
-    with open(CSV_ENERGY, mode="w", newline="") as f:
+    # Save energy.csv
+    with open(CSV_ENERGY, mode='w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(["timestamp_ms", "energy"])
         for t, e in zip(timestamps, energy):
             writer.writerow([t, e])
 
-    with open(CSV_THRS, mode="w", newline="") as f:
+    # Save threshhold.csv
+    with open(CSV_THRS, mode='w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(["timestamp_ms", "event_detected"])
         for t, det in zip(timestamps, threshold):
             writer.writerow([t, det])
 
+    # Plot on-device Window Energy
     plt.figure(figsize=(10, 4))
     plt.plot(norm_time, energy, color="orange")
     plt.title("Filtered Window Energy (E[k])")
@@ -421,7 +424,7 @@ def compute_form_metrics(records_after, records_dsp, csv_path=CSV_METRICS):
         )
     return metrics_list
 
-
+# Main Method
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="EmbedQB Serial Data Acquisition & DSP Analysis")
     parser.add_argument("--port", default=DEFAULT_PORT, help="Serial port identifier")
