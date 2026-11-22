@@ -1,5 +1,16 @@
 # Changelog
 
+## [v0.3.0] - 2026-11-22
+
+### Features
+- feat: Add event and classifier evaluation (e443200)
+- feat: Add throw form classifier training pipeline (b2ba424)
+
+### Other Changes (CI, Docs, Refactor)
+- Merge pull request #17 from IcicleStars/feat/machine-learning (641f3c9)
+- docs: update README (1d5b72f)
+- chore(ML): Add ML dependencies to requirements.txt (1074120)
+
 ## [v0.2.0] - 2026-11-21
 
 ### Features
