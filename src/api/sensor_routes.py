@@ -114,7 +114,6 @@ def process_packet(parts):
     return rec_after, rec_dsp, gyro_mag
 
 def stop_active_worker():
-    global active_thread
     active_stop_event.set()
     if active_thread and active_thread.is_alive():
         active_thread.join(timeout=2.0)
@@ -288,7 +287,6 @@ def stream():
 
     return Response(event_generator(), mimetype="text/event-stream")
 
-
 @sensor_bp.route("/api/connect", methods=["POST"])
 def connect_sensor():
     """Scans wired USB first, then falls back to BLE if available."""
@@ -326,7 +324,6 @@ def connect_sensor():
 def disconnect_sensor():
     stop_active_worker()
     return jsonify({"status": "disconnected", "state": app_state})
-
 
 @sensor_bp.route("/api/mock", methods=["POST"])
 def toggle_mock():

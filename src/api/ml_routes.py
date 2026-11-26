@@ -26,14 +26,12 @@ def set_mode():
             app_state["label"] = data["label"]
         return jsonify(app_state)
 
-
 @ml_bp.route("/api/capture-idle", methods=["POST"])
 def capture_idle():
     if len(recent_after) < 10:
         return jsonify({"error": "Not enough buffered samples yet. Connect sensor or enable Mock Mode."}), 400
     handle_completed_window(list(recent_after), list(recent_dsp), forced_label="idle")
     return jsonify({"status": "captured", "samples": len(recent_after)})
-
 
 @ml_bp.route("/api/seed-synthetic", methods=["POST"])
 def seed_synthetic():
@@ -66,7 +64,6 @@ def dataset_stats():
         "history": list(throw_history)[:10],
     })
 
-
 @ml_bp.route("/api/train", methods=["POST"])
 def train():
     try:
@@ -81,7 +78,6 @@ def train():
         })
     except Exception as exc:
         return jsonify({"error": str(exc)}), 400
-
 
 @ml_bp.route("/figures/confusion_matrix.png")
 def confusion_matrix_img():
