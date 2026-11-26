@@ -1,11 +1,10 @@
+# ml_routes.py is the API routing blueprint for ML and dataset management
+
 import os
-
 from flask import Blueprint, jsonify, request, send_file
-
 import analysis
 import evaluation
 import ml_model
-
 from api.sensor_routes import (
     app_state,
     handle_completed_window,

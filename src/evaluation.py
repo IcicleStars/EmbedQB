@@ -1,3 +1,6 @@
+# evaluation.py acts as the event detection and classifier evaluation suite \ 
+# The file measures accuracy, precision, F1, and runs stratified k-fold \ 
+# cross-validation on the Random Forest classfiers.
 import argparse
 import os
 import matplotlib.pyplot as plt

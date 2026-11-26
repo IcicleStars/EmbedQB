@@ -1,3 +1,7 @@
+/**
+ * ui.js Updates connection badges, mode buttons, dataset counters, throw feedback cards,
+ * session history rows, and training results without holding application state.
+ */
 const MODES = ["monitor", "collect", "inference"];
 
 export function renderStatus(state) {

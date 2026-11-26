@@ -1,3 +1,7 @@
+# sensor_routes.py is the sensor streaming and hardware connection \ 
+# API blueprints. It manages the shared runtime state, background worker threads, \ 
+# rolling IMU buffers, SSE telemetry broadcasting, and sensor control.
+
 import asyncio
 import collections
 import json
@@ -265,7 +269,7 @@ def mock_worker(stop_event):
         t_ms += 2.404
         time.sleep(0.0024)
 
-# ----- API ROUTING FOR SENSORS -----  
+# ----- API ROUTING FOR SENSORS -----
 
 @sensor_bp.route("/stream")
 def stream():

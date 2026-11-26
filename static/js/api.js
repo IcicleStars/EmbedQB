@@ -1,3 +1,8 @@
+/**
+ * api.js is the frontend API & SSE Interface Layer.
+ * It raps all backend HTTP endpoints (fetch) and the Server-Sent Events (/stream) subscription
+ * so UI and chart modules remain decoupled from network logic.
+ */
 async function requestJSON(url, options = {}) {
   const res = await fetch(url, {
     headers: { "Content-Type": "application/json", ...(options.headers || {}) },

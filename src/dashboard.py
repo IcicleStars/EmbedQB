@@ -1,3 +1,5 @@
+# dashboard.py is the entry point for the web dashboard \
+# and initializes the app, registers the sensors, and ML Blueprints
 import os
 
 os.environ["MPLBACKEND"] = "Agg"

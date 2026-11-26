@@ -1,3 +1,8 @@
+/**
+ * chart.js acts as the real-time Telemetry Chart Module.
+ * Manages the Chart.js rolling line plot for filtered window energy, angular velocity magnitude,
+ * and the live threshold preview line.
+ */
 export function createTelemetryChart(canvasId, initialThreshold, maxPoints = 100) {
   let threshold = Number(initialThreshold);
   const ctx = document.getElementById(canvasId).getContext("2d");

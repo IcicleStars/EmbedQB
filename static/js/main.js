@@ -1,3 +1,9 @@
+/**
+ * main.js is the dashboard application controller
+ * It initializes the telemetry chart, binds UI event listeners, 
+ * manages client-side mock state, and connects the live SSE 
+ * stream to the chart and UI renderers.
+ */
 import * as api from "./api.js";
 import { createTelemetryChart } from "./chart.js";
 import * as ui from "./ui.js";
