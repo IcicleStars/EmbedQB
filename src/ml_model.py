@@ -1,3 +1,6 @@
+# ml_model.py classifies throwing forms and is the coaching feedback engine. \ 
+# It will load labeled feature vectors from dataset.csv, trains a \ 
+# random forest pipeline, and runs inference w actional form cues.
 import argparse
 import csv
 import os
@@ -153,13 +156,13 @@ def generate_coaching_feedback(label, metrics):
 
     cues = []
     if float(metrics.get("peak_angular_velocity_dps", 0.0)) < 350.0:
-        cues.append("Low peak hip velocity—drive your hips through faster before arm release.")
+        cues.append("Low peak hip velocity; drive your hips through faster before arm release.")
     if float(metrics.get("cross_axis_variance", 0.0)) > 8500.0:
-        cues.append("High off-axis wobble—keep your torso level during rotation.")
+        cues.append("High off-axis wobble; keep your torso level during rotation.")
     if float(metrics.get("deceleration_slope_dps2", 0.0)) > -800.0:
-        cues.append("Gradual deceleration—focus on a firmer plant leg to transfer torque.")
+        cues.append("Gradual deceleration; focus on a firmer plant leg to transfer torque.")
 
-    return " ".join(cues) if cues else "Inconsistent hip mechanics detected—review rotation timing."
+    return " ".join(cues) if cues else "Inconsistent hip mechanics detected; review rotation timing."
 
 def predict_throw(metrics, model_path=DEFAULT_MODEL_PATH):
     """Predicts throwing form class, confidence, and coaching cue for a single event dict."""

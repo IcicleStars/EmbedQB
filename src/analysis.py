@@ -1,3 +1,7 @@
+# analysis.py is the CLI Data acquisition, DSP visualization, \ 
+# and Feature extraction. It'll detect throw event windows, extract metrics, \
+# and append labeled trials to datasets.
+
 import serial
 import csv
 import time

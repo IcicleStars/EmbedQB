@@ -25,11 +25,11 @@
 - [ ] `chore`: Calibration, dataset updates, or maintenance
 
 ## Component(s) Affected
-- [ ] **Firmware (`src/src.ino`)** — Seeed Studio XIAO MG24 Sense / LSM6DS3
-- [ ] **Analysis & DSP (`src/analysis.py`)** — Serial parsing, plotting, FFT/STFT, metric extraction
-- [ ] **Machine Learning / Dashboard** — Form classifier or real-time athlete UI
-- [ ] **Hardware / Mounting** — Hip attachment or enclosure adjustments
-- [ ] **CI/CD & Configs** — `.github/workflows/` or `requirements.txt`
+- [ ] **Firmware (`src/src.ino`)** - Seeed Studio XIAO MG24 Sense / LSM6DS3
+- [ ] **Analysis & DSP (`src/analysis.py`)** - Serial parsing, plotting, FFT/STFT, metric extraction
+- [ ] **Machine Learning / Dashboard** - Form classifier or real-time athlete UI
+- [ ] **Hardware / Mounting** - Hip attachment or enclosure adjustments
+- [ ] **CI/CD & Configs** - `.github/workflows/` or `requirements.txt`
 
 ---
 
