@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.4.0] - 2026-11-26
+
+### Features
+- feat: Split dashboard APIs into Flask blueprints (1759194)
+- feat: Add throwing telemetry dashboard (3e43dbf)
+
+### Bug Fixes
+- fix: remove "unused" global active_thread (d6ca118)
+
+### Other Changes (CI, Docs, Refactor)
+- Merge pull request #18 from IcicleStars/feat/Web-Dashboard (a393617)
+- Merge branch 'feat/Web-Dashboard' of https://github.com/IcicleStars/EmbedQB into feat/Web-Dashboard (9678d22)
+- docs: Revise README with updated dependencies and instructions (6d41f54)
+- docs: Add file purposes and explanations for developer readability (2d8a6d1)
+- chore: install Flask (5f74085)
+
 ## [v0.3.0] - 2026-11-22
 
 ### Features
