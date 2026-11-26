@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EmbedQB — Real-Time Throwing Dashboard</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+</head>
+<body data-threshold="{{ threshold }}">
+
+    <div class="container">
+        <header>
+
+            <div>
+                <h1>EmbedQB — Athlete Telemetry &amp; ML Studio</h1>
+            </div>
+            
+            <div class="row" style="margin: 0;">
+                <span id="status-badge" class="badge offline">Disconnected</span>
+
+                <button id="btn-connect" class="turf">Scan &amp; Connect (USB → BLE)</button>
+                <button id="btn-mock" class="leather">Enable Mock</button>
+
+                <select id="mock-profile">
+                <option value="mixed">Mock: Mixed</option>
+                <option value="good_form">Mock: Good Form</option>
+                <option value="bad_form">Mock: Bad Form</option>
+                <option value="idle">Mock: Idle</option>
+                </select>
+
+                <button id="btn-disconnect" class="danger">Disconnect</button>
+
+            </div>
+
+        </header>
+
+        <div class="grid">
+            <div>
+                <div class="card">
+                    <div class="row" style="justify-content: space-between;">
+
+                        <h2 style="margin: 0;">Live IMU &amp; DSP Stream</h2>
+
+                        <div class="row" style="margin: 0;">
+
+                            <label for="thresh-slider" style="font-size: 0.85rem;">
+                                Preview Threshold: <strong id="thresh-val">{{ threshold }}</strong>
+                            </label>
+
+                            <input id="thresh-slider" type="range" min="10" max="150" step="1" value="{{ threshold }}" />
+                            
+                        </div>
+                    </div>
+
+                    <canvas id="telemetryChart" height="115"></canvas>
+                    <h3 style="margin-top: 16px;">Latest Throw Feedback</h3>
+                
+                    <div id="feedback-box">Connect your XIAO MG24 Sense or enable Mock Mode to begin.</div>
+            
+                </div>
+
+            <div class="card">
+
+                <h3>Session Throw Log</h3>
+
+                <table>
+
+                    <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Peak Gyro</th>
+                        <th>Peak Energy</th>
+                        <th>Cross-Axis Var</th>
+                        <th>Result</th>
+                    </tr>
+                    </thead>
+
+                    <tbody id="history-body">
+                        <tr><td colspan="5" style="opacity: 0.6;">No throw events yet.</td></tr>
+                    </tbody>
+
+            
+                </table>
+            </div>
+        </div>
+
+        <div>
+            <div class="card">
+
+                <h2>Workflow Mode</h2>
+                <div class="row">
+                    <button id="btn-monitor" class="active">Monitor</button>
+                    <button id="btn-collect">Collect</button>
+                    <button id="btn-inference">Inference</button>
+                </div>
+
+                <h3>Data Labeling</h3>
+
+                <div class="row">
+                    <select id="label-select">
+                    <option value="good_form">good_form</option>
+                    <option value="bad_form">bad_form</option>
+                    <option value="idle">idle</option>
+                    </select>
+                    <button id="btn-capture-idle" class="leather">Capture Idle (1s)</button>
+                </div>
+
+                <h3>Dataset &amp; Training</h3>
+
+                <div id="dataset-stats" class="row">Loading...</div>
+
+                <div class="row">
+                    <button id="btn-train" class="turf">Train &amp; Evaluate</button>
+                    <button id="btn-seed">Seed Synthetic</button>
+                    <button id="btn-download" class="leather">Download CSV</button>
+                </div>
+
+                <div id="train-output" style="font-size: 0.9rem;"></div>
+                <img id="cm-img" style="display: none;" alt="Confusion Matrix" />
+
+                
+            </div>
+        </div>
+    </div>
+</body>
+</html>
